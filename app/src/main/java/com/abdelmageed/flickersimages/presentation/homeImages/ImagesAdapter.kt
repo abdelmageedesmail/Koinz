@@ -29,13 +29,22 @@ class ImagesAdapter(
     override fun onBindViewHolder(holder: JobsViewHolder, position: Int) {
         images[position]?.let { holder.bind(it) }
         holder.setIsRecyclable(false)
+        if (position % 5 == 0 && position != 0) {
+            binding.btnCard.visibility = View.VISIBLE
+        } else {
+            binding.btnCard.visibility = View.GONE
+        }
 
     }
 
-    fun addItems(invoices: MutableList<PhotoItem?>) {
-        images.addAll(invoices)
+    fun addItems(imageList: MutableList<PhotoItem?>) {
+        images.addAll(imageList)
         notifyItemInserted(images.size - 1)
 
+    }
+
+    fun getImages(): MutableList<PhotoItem?> {
+        return images
     }
 
     override fun getItemCount() = images.size

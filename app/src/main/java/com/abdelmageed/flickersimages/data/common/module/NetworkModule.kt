@@ -1,12 +1,18 @@
 package com.abdelmageed.flickersimages.data.common.module
 
+import android.app.Application
+import android.content.Context
 import android.util.Log
+import androidx.room.Room
+import com.abdelmageed.flickersimages.data.locale_data_source.ImageDao
+import com.abdelmageed.flickersimages.data.locale_data_source.ImagesDatabase
 import com.abdelmageed.flickersimages.data.module.remote.api.ApiService
 import com.abdelmageed.flickersimages.data.repository.ImageRepositoryImpl
 import com.abdelmageed.flickersimages.domain.images.ImageRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -52,10 +58,6 @@ object NetworkModule {
     @Singleton
     @Provides
     fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
-        Log.e(
-            "BaseUrl",
-            "${getBaseUrl()}?method=flickr.photos.search&format=json&nojsoncallback=50&text=Color&page=1&per_page=20&api_key=6d39390b9067db8926e05a566f995003"
-        )
         return Retrofit.Builder()
             .addConverterFactory(GsonConverterFactory.create())
             .baseUrl(getBaseUrl())
@@ -63,14 +65,15 @@ object NetworkModule {
             .build()
     }
 
+
     @Provides
     @Singleton
     fun provideApiService(retrofit: Retrofit) = retrofit.create(ApiService::class.java)
 
     @Provides
     @Singleton
-    fun provideImageRepo(apiService: ApiService): ImageRepository {
-        return ImageRepositoryImpl(apiService)
+    fun provideImageRepo(apiService: ApiService, db: ImageDao): ImageRepository {
+        return ImageRepositoryImpl(apiService, db)
     }
 
 }

@@ -2,6 +2,8 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("kotlin-android")
+    id("kotlin-parcelize")
+    id("org.jetbrains.kotlin.kapt")
     id("kotlin-kapt")
     id("androidx.navigation.safeargs")
     id("dagger.hilt.android.plugin")
@@ -41,6 +43,16 @@ android {
         }
     }
 
+    kapt {
+        javacOptions {
+            // Increase the max count of errors from annotation processors.
+            // Default is 100.
+            option("-Xmaxerrs", 500)
+        }
+        // Configure kapt to correct error types for Hilt
+        correctErrorTypes = true
+    }
+
     externalNativeBuild {
         cmake {
             path("src/cpp/CMakeLists.txt")
@@ -76,6 +88,9 @@ dependencies {
     kapt("androidx.hilt:hilt-compiler:1.0.0")
     implementation("androidx.hilt:hilt-navigation-fragment:1.0.0")
 
+    implementation ("com.google.code.gson:gson:2.8.8")
+
+
     // retrofit
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
@@ -97,12 +112,26 @@ dependencies {
     kapt("com.github.bumptech.glide:compiler:4.14.2")
     implementation("com.github.bumptech.glide:okhttp3-integration:4.14.2")
 
+    // Room components
+    implementation ("androidx.room:room-ktx:2.5.1")
+    kapt ("androidx.room:room-compiler:2.5.1")
+
     //dimensions
     implementation("com.intuit.ssp:ssp-android:1.1.0")
     implementation("com.intuit.sdp:sdp-android:1.1.0")
-
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
 }
+
+//kapt {
+//    generateStubs = true
+//    correctErrorTypes = true
+//    javacOptions {
+//        // These options are normally set automatically via the Hilt Gradle plugin, but we
+//        // set them manually to workaround a bug in the Kotlin 1.5.20
+//        option("-Adagger.fastInit=ENABLED")
+//        option("-Adagger.hilt.android.internal.disableAndroidSuperclassValidation=true")
+//    }
+//}

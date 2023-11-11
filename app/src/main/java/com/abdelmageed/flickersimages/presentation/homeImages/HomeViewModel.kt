@@ -1,17 +1,19 @@
 package com.abdelmageed.flickersimages.presentation.homeImages
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.abdelmageed.flickersimages.data.common.utils.WrappedResponseWithError
 import com.abdelmageed.flickersimages.data.module.remote.dto.BaseErrorResponse
 import com.abdelmageed.flickersimages.data.module.remote.dto.FlickerImagesResponse
+import com.abdelmageed.flickersimages.data.module.remote.dto.PhotoItem
 import com.abdelmageed.flickersimages.domain.base.BaseResult
 import com.abdelmageed.flickersimages.domain.images.ImagesUseCase
+import com.abdelmageed.flickersimages.domain.model.ImageModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -32,11 +34,16 @@ sealed class HomeFragmentState {
     @androidx.annotation.Keep
     data class ErrorGetImages(val errorResponse: WrappedResponseWithError<Unit, BaseErrorResponse>) :
         HomeFragmentState()
+
+    @androidx.annotation.Keep
+    data class GetImagesFromDb(val images: MutableList<PhotoItem?>) :
+        HomeFragmentState()
 }
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(private val imagesUseCase: ImagesUseCase) : ViewModel() {
 
+    private val listOfImages: MutableList<PhotoItem?> = mutableListOf()
     private val imageState = MutableStateFlow<HomeFragmentState>(HomeFragmentState.Init)
     val mImageState: StateFlow<HomeFragmentState> get() = imageState
 
@@ -74,6 +81,31 @@ class HomeViewModel @Inject constructor(private val imagesUseCase: ImagesUseCase
                     is BaseResult.Success -> result.data?.let { successGetImage(it) }
                     is BaseResult.Error -> failedGetImage(result.rawResponse)
                 }
+            }
+        }
+    }
+
+    fun addImages(imageList: MutableList<PhotoItem?>) {
+        listOfImages.addAll(imageList)
+    }
+
+    fun getAllImages(): MutableList<PhotoItem?> {
+        return listOfImages
+    }
+
+    fun insertToDataBase(images: ImageModel) {
+        viewModelScope.launch {
+            imagesUseCase.invokeToDb(images)
+        }
+    }
+
+    fun getImagesFromDb() {
+        viewModelScope.launch {
+            imagesUseCase.invokeGetImagesFromDb().catch { exception ->
+                exception.message?.let { showToast(it) }
+            }.collect { images ->
+                Log.e("imagesSizeFromDb", images.photos.size.toString())
+                imageState.value = HomeFragmentState.GetImagesFromDb(images.photos)
             }
         }
     }

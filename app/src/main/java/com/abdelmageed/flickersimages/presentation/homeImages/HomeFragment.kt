@@ -1,6 +1,7 @@
 package com.abdelmageed.flickersimages.presentation.homeImages
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,11 +12,16 @@ import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView.LayoutManager
 import com.abdelmageed.flickersimages.data.common.utils.WrappedResponseWithError
 import com.abdelmageed.flickersimages.data.module.remote.dto.BaseErrorResponse
 import com.abdelmageed.flickersimages.data.module.remote.dto.FlickerImagesResponse
+import com.abdelmageed.flickersimages.data.module.remote.dto.PhotoItem
 import com.abdelmageed.flickersimages.databinding.FragmentHomeBinding
+import com.abdelmageed.flickersimages.domain.model.ImageModel
 import com.abdelmageed.flickersimages.extensions.initProgressDialog
+import com.abdelmageed.flickersimages.extensions.isOnline
 import com.abdelmageed.flickersimages.extensions.showToast
 import com.abdelmageed.flickersimages.utils.PaginationScrollListener
 import dagger.hilt.android.AndroidEntryPoint
@@ -43,7 +49,10 @@ class HomeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        viewModel.getImages(page, 20)
+        if (requireActivity().isOnline())
+            viewModel.getImages(page, 20)
+        else
+            viewModel.getImagesFromDb()
         observe()
         binding.apply {
 
@@ -58,13 +67,14 @@ class HomeFragment : Fragment() {
 
             rvImages.adapter = adapter
             rvImages.setHasFixedSize(true)
-            val gridLayoutManager = GridLayoutManager(requireActivity(), 2)
+            val gridLayoutManager =
+                LinearLayoutManager(requireActivity(), LinearLayoutManager.VERTICAL, false)
             rvImages.layoutManager = gridLayoutManager
 
 
             rvImages.addOnScrollListener(
                 object :
-                    PaginationScrollListener(rvImages.layoutManager as GridLayoutManager) {
+                    PaginationScrollListener(rvImages.layoutManager as LinearLayoutManager) {
                     override fun isLastPage(): Boolean {
                         return isLastPage
                     }
@@ -75,7 +85,6 @@ class HomeFragment : Fragment() {
 
                     override fun loadMoreItems() {
                         isLoading = true
-
                         getMoreItems()
                     }
                 })
@@ -88,6 +97,7 @@ class HomeFragment : Fragment() {
             is HomeFragmentState.ShowToast -> requireContext().showToast(state.message)
             is HomeFragmentState.IsLoading -> handleLoading(state.isLoading)
             is HomeFragmentState.GetImages -> handleSuccessGetImage(state.flickerImagesResponse)
+            is HomeFragmentState.GetImagesFromDb -> handlePreviewImages(state.images)
             is HomeFragmentState.ErrorGetImages -> handleErrorGetImage(state.errorResponse)
             is HomeFragmentState.Init -> Unit
         }
@@ -98,13 +108,23 @@ class HomeFragment : Fragment() {
     }
 
     private fun handleSuccessGetImage(flickerImagesResponse: FlickerImagesResponse) {
+        Log.e("totalImages", flickerImagesResponse.photos?.pages.toString())
         if ((flickerImagesResponse.photos?.pages!! > page)) {
             isLastPage = false
             page++
+            val imageModel = ImageModel(page, flickerImagesResponse.photos.photo)
+            viewModel.insertToDataBase(imageModel)
+
             adapter?.addItems(flickerImagesResponse.photos.photo)
+
         } else {
             isLastPage = true
         }
+    }
+
+    private fun handlePreviewImages(images: MutableList<PhotoItem?>) {
+        isLastPage = false
+        images.let { adapter?.addItems(it) }
     }
 
     fun getMoreItems() {
