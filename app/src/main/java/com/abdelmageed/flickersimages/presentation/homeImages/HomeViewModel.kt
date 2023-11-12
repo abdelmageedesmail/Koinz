@@ -95,13 +95,16 @@ class HomeViewModel @Inject constructor(private val imagesUseCase: ImagesUseCase
             imagesUseCase.invokeGetImagesFromDb().catch { exception ->
                 showToast("No Internet connection")
             }.collect { images ->
-                imageState.value = images.let {
-                    it.photos?.let { HomeFragmentState.GetImagesFromDb(it) }
-                        ?: HomeFragmentState.GetImagesFromDb(
-                            mutableListOf()
-                        )
+                if (images == null) {
+                    imageState.value = HomeFragmentState.GetImagesFromDb(mutableListOf())
+                } else {
+                    imageState.value = images.let {
+                        it.photos?.let { HomeFragmentState.GetImagesFromDb(it) }
+                            ?: HomeFragmentState.GetImagesFromDb(
+                                mutableListOf()
+                            )
+                    }
                 }
-
             }
         }
     }

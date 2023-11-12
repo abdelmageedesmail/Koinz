@@ -20,7 +20,10 @@ import com.abdelmageed.flickersimages.databinding.FragmentHomeBinding
 import com.abdelmageed.flickersimages.domain.model.ImageModel
 import com.abdelmageed.flickersimages.extensions.initProgressDialog
 import com.abdelmageed.flickersimages.extensions.isOnline
+import com.abdelmageed.flickersimages.extensions.showSnackBar
 import com.abdelmageed.flickersimages.extensions.showToast
+import com.abdelmageed.flickersimages.extensions.viewIsGone
+import com.abdelmageed.flickersimages.extensions.viewIsVisible
 import com.abdelmageed.flickersimages.utils.PaginationScrollListener
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.launchIn
@@ -37,7 +40,7 @@ class HomeFragment : Fragment() {
     private var page = 1
     private lateinit var imageModel: ImageModel
     private var images = mutableListOf<PhotoItem?>()
-
+    var isNetworkConnected = false
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
@@ -47,8 +50,18 @@ class HomeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        if (requireActivity().isOnline()) viewModel.getImages(page, 20)
-        else viewModel.getImagesFromDb()
+        isNetworkConnected = requireActivity().isOnline()
+        if (isNetworkConnected) viewModel.getImages(page, 20)
+        else {
+            viewModel.getImagesFromDb()
+            binding.root.showSnackBar(isNetworkConnected) {
+                isNetworkConnected = requireActivity().isOnline()
+                if (requireActivity().isOnline()) {
+                    viewModel.getImages(page, 20)
+                }
+            }
+        }
+
         observe()
         binding.apply {
             imageModel = ImageModel(null, images)
@@ -105,6 +118,7 @@ class HomeFragment : Fragment() {
     private fun handleSuccessGetImage(flickerImagesResponse: FlickerImagesResponse) {
         Log.e("totalImages", flickerImagesResponse.photos?.pages.toString())
         if ((flickerImagesResponse.photos?.pages!! > page)) {
+            binding.noData.viewIsGone()
             isLastPage = false
             page++
             imageModel.imageId = 1
@@ -125,8 +139,13 @@ class HomeFragment : Fragment() {
     }
 
     private fun handlePreviewImages(images: MutableList<PhotoItem?>) {
-        isLastPage = false
-        images.let { adapter?.addItems(it) }
+        if (images.size > 0) {
+            binding.noData.viewIsGone()
+            isLastPage = false
+            images.let { adapter?.addItems(it) }
+        } else {
+            binding.noData.viewIsVisible()
+        }
     }
 
     fun getMoreItems() {

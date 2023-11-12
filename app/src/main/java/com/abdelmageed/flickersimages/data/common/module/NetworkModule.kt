@@ -1,18 +1,12 @@
 package com.abdelmageed.flickersimages.data.common.module
 
-import android.app.Application
-import android.content.Context
-import android.util.Log
-import androidx.room.Room
 import com.abdelmageed.flickersimages.data.locale_data_source.ImageDao
-import com.abdelmageed.flickersimages.data.locale_data_source.ImagesDatabase
 import com.abdelmageed.flickersimages.data.module.remote.api.ApiService
 import com.abdelmageed.flickersimages.data.repository.ImageRepositoryImpl
 import com.abdelmageed.flickersimages.domain.images.ImageRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -20,7 +14,6 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
-import javax.net.ssl.X509TrustManager
 
 @Module
 @InstallIn(SingletonComponent::class)
