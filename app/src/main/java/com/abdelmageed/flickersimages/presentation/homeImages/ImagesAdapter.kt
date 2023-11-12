@@ -9,6 +9,8 @@ import com.abdelmageed.flickersimages.data.module.remote.dto.PhotoItem
 import com.abdelmageed.flickersimages.databinding.ItemImagesBinding
 import com.abdelmageed.flickersimages.extensions.applyImage
 import com.abdelmageed.flickersimages.extensions.createImageUrl
+import com.abdelmageed.flickersimages.extensions.viewIsGone
+import com.abdelmageed.flickersimages.extensions.viewIsVisible
 
 
 class ImagesAdapter(
@@ -30,9 +32,9 @@ class ImagesAdapter(
         images[position]?.let { holder.bind(it) }
         holder.setIsRecyclable(false)
         if (position % 5 == 0 && position != 0) {
-            binding.btnCard.visibility = View.VISIBLE
+            binding.ivKoinzBannerLogo.viewIsVisible()
         } else {
-            binding.btnCard.visibility = View.GONE
+            binding.ivKoinzBannerLogo.viewIsGone()
         }
 
     }
@@ -43,9 +45,6 @@ class ImagesAdapter(
 
     }
 
-    fun getImages(): MutableList<PhotoItem?> {
-        return images
-    }
 
     override fun getItemCount() = images.size
 
@@ -67,7 +66,6 @@ class ImagesAdapter(
                     image.secret.toString()
                 )
                 ivImage.applyImage(imageUrl)
-                Log.e("image", image.title.toString())
                 ivImage.setOnClickListener {
                     clickListener(imageUrl)
                 }

@@ -27,14 +27,16 @@
 
         </com.google.android.material.card.MaterialCardView>
 
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/btnCard"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/black"
-            android:text="Banner"
-            android:visibility="gone"
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/ivKoinzBannerLogo"
+            android:layout_width="@dimen/_90sdp"
+            android:layout_height="@dimen/_90sdp"
+            android:layout_marginTop="@dimen/_10sdp"
+            android:src="@drawable/koinz_logo"
             android:textColor="@color/white"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/materialCard" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

@@ -18,7 +18,7 @@ fun Context.showToast(message: String, length: Int? = Toast.LENGTH_SHORT) {
 fun ImageView.applyImage(imageUrl: String) {
     Glide.with(this.context).load(imageUrl)
         .diskCacheStrategy(DiskCacheStrategy.DATA)
-        .error(R.mipmap.ic_launcher).into(this)
+        .error(R.drawable.koinz_logo).into(this)
 }
 
 

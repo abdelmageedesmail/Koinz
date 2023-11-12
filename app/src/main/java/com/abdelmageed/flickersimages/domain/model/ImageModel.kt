@@ -10,8 +10,8 @@ import com.abdelmageed.flickersimages.utils.ArrayListConverter
 
 @Entity(tableName = "images")
 data class ImageModel(
-    @PrimaryKey(autoGenerate = true) val imageId: Int,
+    @PrimaryKey(autoGenerate = true) var imageId: Int? = null,
 
     @ColumnInfo(name = "photoItems")
-    val photos: MutableList<PhotoItem?>
+    var photos: List<PhotoItem?> = emptyList()
 )

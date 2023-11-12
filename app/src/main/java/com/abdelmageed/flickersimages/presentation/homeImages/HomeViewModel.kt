@@ -36,14 +36,12 @@ sealed class HomeFragmentState {
         HomeFragmentState()
 
     @androidx.annotation.Keep
-    data class GetImagesFromDb(val images: MutableList<PhotoItem?>) :
-        HomeFragmentState()
+    data class GetImagesFromDb(val images: List<PhotoItem?>) : HomeFragmentState()
 }
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(private val imagesUseCase: ImagesUseCase) : ViewModel() {
 
-    private val listOfImages: MutableList<PhotoItem?> = mutableListOf()
     private val imageState = MutableStateFlow<HomeFragmentState>(HomeFragmentState.Init)
     val mImageState: StateFlow<HomeFragmentState> get() = imageState
 
@@ -85,27 +83,25 @@ class HomeViewModel @Inject constructor(private val imagesUseCase: ImagesUseCase
         }
     }
 
-    fun addImages(imageList: MutableList<PhotoItem?>) {
-        listOfImages.addAll(imageList)
-    }
-
-    fun getAllImages(): MutableList<PhotoItem?> {
-        return listOfImages
-    }
-
     fun insertToDataBase(images: ImageModel) {
         viewModelScope.launch {
             imagesUseCase.invokeToDb(images)
         }
     }
 
+
     fun getImagesFromDb() {
         viewModelScope.launch {
             imagesUseCase.invokeGetImagesFromDb().catch { exception ->
-                exception.message?.let { showToast(it) }
+                showToast("No Internet connection")
             }.collect { images ->
-                Log.e("imagesSizeFromDb", images.photos.size.toString())
-                imageState.value = HomeFragmentState.GetImagesFromDb(images.photos)
+                imageState.value = images.let {
+                    it.photos?.let { HomeFragmentState.GetImagesFromDb(it) }
+                        ?: HomeFragmentState.GetImagesFromDb(
+                            mutableListOf()
+                        )
+                }
+
             }
         }
     }

@@ -10,5 +10,6 @@ class ArrayListConverter {
     fun listToJsonString(value: List<PhotoItem>?): String = Gson().toJson(value)
 
     @TypeConverter
-    fun jsonStringToList(value: String) = Gson().fromJson(value, Array<PhotoItem>::class.java).toList()
+    fun jsonStringToList(value: String) =
+        Gson().fromJson(value, Array<PhotoItem>::class.java).toMutableList()
 }

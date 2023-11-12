@@ -43,6 +43,7 @@ android {
         }
     }
 
+
     kapt {
         javacOptions {
             // Increase the max count of errors from annotation processors.
@@ -88,7 +89,7 @@ dependencies {
     kapt("androidx.hilt:hilt-compiler:1.0.0")
     implementation("androidx.hilt:hilt-navigation-fragment:1.0.0")
 
-    implementation ("com.google.code.gson:gson:2.8.8")
+    implementation("com.google.code.gson:gson:2.8.8")
 
 
     // retrofit
@@ -113,25 +114,23 @@ dependencies {
     implementation("com.github.bumptech.glide:okhttp3-integration:4.14.2")
 
     // Room components
-    implementation ("androidx.room:room-ktx:2.5.1")
-    kapt ("androidx.room:room-compiler:2.5.1")
+    implementation("androidx.room:room-ktx:2.5.1")
+    kapt("androidx.room:room-compiler:2.5.1")
 
     //dimensions
     implementation("com.intuit.ssp:ssp-android:1.1.0")
     implementation("com.intuit.sdp:sdp-android:1.1.0")
 
+    //App Center
+    implementation("com.microsoft.appcenter:appcenter-analytics:4.4.5")
+    implementation("com.microsoft.appcenter:appcenter-crashes:4.4.5")
+    implementation("com.microsoft.appcenter:appcenter-distribute:5.0.0")
+
+    //circleImageView
+    implementation("de.hdodenhof:circleimageview:3.1.0")
+
+
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
 }
-
-//kapt {
-//    generateStubs = true
-//    correctErrorTypes = true
-//    javacOptions {
-//        // These options are normally set automatically via the Hilt Gradle plugin, but we
-//        // set them manually to workaround a bug in the Kotlin 1.5.20
-//        option("-Adagger.fastInit=ENABLED")
-//        option("-Adagger.hilt.android.internal.disableAndroidSuperclassValidation=true")
-//    }
-//}

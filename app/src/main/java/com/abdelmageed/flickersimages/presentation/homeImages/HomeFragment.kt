@@ -11,9 +11,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView.LayoutManager
 import com.abdelmageed.flickersimages.data.common.utils.WrappedResponseWithError
 import com.abdelmageed.flickersimages.data.module.remote.dto.BaseErrorResponse
 import com.abdelmageed.flickersimages.data.module.remote.dto.FlickerImagesResponse
@@ -31,17 +29,17 @@ import kotlinx.coroutines.flow.onEach
 @AndroidEntryPoint
 class HomeFragment : Fragment() {
     private lateinit var binding: FragmentHomeBinding
-    private val viewModel: HomeViewModel by viewModels<HomeViewModel>()
+    private val viewModel: HomeViewModel by viewModels()
     private val dialog by lazy { initProgressDialog(requireActivity(), true) }
     private var adapter: ImagesAdapter? = null
     private var isLastPage: Boolean = false
     private var isLoading: Boolean = false
     private var page = 1
+    private lateinit var imageModel: ImageModel
+    private var images = mutableListOf<PhotoItem?>()
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         binding = FragmentHomeBinding.inflate(layoutInflater, container, false)
         return binding.root
@@ -49,13 +47,11 @@ class HomeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        if (requireActivity().isOnline())
-            viewModel.getImages(page, 20)
-        else
-            viewModel.getImagesFromDb()
+        if (requireActivity().isOnline()) viewModel.getImages(page, 20)
+        else viewModel.getImagesFromDb()
         observe()
         binding.apply {
-
+            imageModel = ImageModel(null, images)
             page = 1
             adapter = ImagesAdapter(mutableListOf()) { imageUrl ->
                 findNavController().navigate(
@@ -72,22 +68,21 @@ class HomeFragment : Fragment() {
             rvImages.layoutManager = gridLayoutManager
 
 
-            rvImages.addOnScrollListener(
-                object :
-                    PaginationScrollListener(rvImages.layoutManager as LinearLayoutManager) {
-                    override fun isLastPage(): Boolean {
-                        return isLastPage
-                    }
+            rvImages.addOnScrollListener(object :
+                PaginationScrollListener(rvImages.layoutManager as LinearLayoutManager) {
+                override fun isLastPage(): Boolean {
+                    return isLastPage
+                }
 
-                    override fun isLoading(): Boolean {
-                        return isLoading
-                    }
+                override fun isLoading(): Boolean {
+                    return isLoading
+                }
 
-                    override fun loadMoreItems() {
-                        isLoading = true
-                        getMoreItems()
-                    }
-                })
+                override fun loadMoreItems() {
+                    isLoading = true
+                    if (requireActivity().isOnline()) getMoreItems()
+                }
+            })
         }
 
     }
@@ -97,7 +92,7 @@ class HomeFragment : Fragment() {
             is HomeFragmentState.ShowToast -> requireContext().showToast(state.message)
             is HomeFragmentState.IsLoading -> handleLoading(state.isLoading)
             is HomeFragmentState.GetImages -> handleSuccessGetImage(state.flickerImagesResponse)
-            is HomeFragmentState.GetImagesFromDb -> handlePreviewImages(state.images)
+            is HomeFragmentState.GetImagesFromDb -> handlePreviewImages(state.images.toMutableList())
             is HomeFragmentState.ErrorGetImages -> handleErrorGetImage(state.errorResponse)
             is HomeFragmentState.Init -> Unit
         }
@@ -112,8 +107,15 @@ class HomeFragment : Fragment() {
         if ((flickerImagesResponse.photos?.pages!! > page)) {
             isLastPage = false
             page++
-            val imageModel = ImageModel(page, flickerImagesResponse.photos.photo)
+            imageModel.imageId = 1
+            images.addAll(flickerImagesResponse.photos.photo)
+            imageModel.photos = images.toList()
             viewModel.insertToDataBase(imageModel)
+
+            Log.e(
+                "imageModelPhotosSize",
+                "${(imageModel.photos as MutableList<PhotoItem?>).size}...${page}"
+            )
 
             adapter?.addItems(flickerImagesResponse.photos.photo)
 
@@ -133,10 +135,9 @@ class HomeFragment : Fragment() {
     }
 
     private fun observe() {
-        viewModel.mImageState
-            .flowWithLifecycle(viewLifecycleOwner.lifecycle, Lifecycle.State.STARTED)
-            .onEach { state -> handleStateChange(state) }
-            .launchIn(viewLifecycleOwner.lifecycleScope)
+        viewModel.mImageState.flowWithLifecycle(
+            viewLifecycleOwner.lifecycle, Lifecycle.State.STARTED
+        ).onEach { state -> handleStateChange(state) }.launchIn(viewLifecycleOwner.lifecycleScope)
     }
 
     private fun handleLoading(isLoading: Boolean) {
